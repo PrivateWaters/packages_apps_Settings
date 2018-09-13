@@ -20,9 +20,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.support.annotation.VisibleForTesting;
+import android.text.BidiFormatter;
 import android.util.Log;
 import android.view.View;
 
@@ -52,6 +54,12 @@ public class FirmwareVersionDialogController implements View.OnClickListener {
         mDialog = dialog;
         mContext = dialog.getContext();
         mUserManager = (UserManager) mContext.getSystemService(Context.USER_SERVICE);
+    }
+
+    private String getAquaBuildDate(){
+        String buildDate = SystemProperties.get("ro.build.date","");
+        String buildType = SystemProperties.get("ro.aquarios.type","");
+        return buildDate.equals("") ? "" : "AquariOS-" + buildDate + "-" + buildType;
     }
 
     @Override
@@ -86,7 +94,15 @@ public class FirmwareVersionDialogController implements View.OnClickListener {
         initializeAdminPermissions();
         registerClickListeners();
 
-        mDialog.setText(FIRMWARE_VERSION_VALUE_ID, Build.VERSION.RELEASE);
+        StringBuilder sb = new StringBuilder();
+        sb.append(BidiFormatter.getInstance().unicodeWrap(Build.VERSION.RELEASE));
+        String aquaBuildDate= getAquaBuildDate();
+        if (!aquaBuildDate.equals("")){
+//          We don't need to show this
+//          sb.append("\n");
+            sb.append(aquaBuildDate);
+        }
+        mDialog.setText(FIRMWARE_VERSION_VALUE_ID, sb.toString());
     }
 
     private void registerClickListeners() {
